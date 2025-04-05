@@ -1,13 +1,14 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+import model
 import os
 
 app = Flask(__name__)
 CORS(app)  # Frontend ile iletişim için CORS'u aktif ediyoruz
 
 # MySQL veritabanı yapılandırması
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:211213058nA@localhost/file_uploads'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:211213058nA@localhost:3310/file_uploads'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 db = SQLAlchemy(app)
@@ -40,9 +41,13 @@ def upload_file():
     filename = file.filename
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
+    cnn_model = model.load_selected_model(0)
+
     try:
         # Dosyayı sunucuda kaydet
         file.save(filepath)
+
+        model.predict_image(cnn_model, filepath)
 
         # Dosya bilgilerini veritabanına kaydet
         new_photo = Photo(filename=filename, filepath=filepath)
